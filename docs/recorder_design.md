@@ -169,9 +169,19 @@ Tests: fixtures of real recorded frames -> normaliser -> expected rows;
 
 ## Deployment
 
-- EU VPS (Hetzner, Ubuntu 24.04). Latency to Kalshi is irrelevant for recording.
-- Backups: Hetzner Storage Box via rclone (SFTP), hourly; plus periodic copies
-  to a local disk. Final sizing after measuring 48 h of real volume.
+- Running since 2026-11-12 on an Oracle Cloud Always Free instance (Madrid,
+  ARM64, 2 cores, 11 GB RAM, 50 GB disk), as Docker containers. See
+  `recorder/README.md`. (The original plan was a paid Hetzner VPS.)
+- Volume is the constraint: 7-19 GB/day of compressed raw data for the crypto
+  scope alone. Finished hourly files are moved to another machine with
+  `python -m tfg.recorder.pull --delete` (SHA-256 verified); a disk guard
+  pauses recording before the disk fills.
+- Long term, raw data cannot be kept forever at this rate. Once the normaliser
+  is validated, raw files older than a retention window are to be replaced by
+  their Parquet form. Retention policy to be decided with measured sizes.
+- Polymarket connections: one per (asset, window). The server closes busy
+  connections with code 1013 ("slow consumer"); this still happens
+  occasionally per shard and each reconnect starts with a fresh snapshot.
 - Secrets only in `.env` (gitignored). Polymarket: throwaway wallet without
   funds, used only to derive CLOB API credentials. Kalshi: read-only API key.
 
