@@ -66,6 +66,10 @@ class ClobConfig:
     refresh_interval_s: float = 30.0
     stale_after_s: float = 30.0
     max_frame_bytes: int = 1 << 24
+    # Frames the client may buffer in memory before it stops reading from the
+    # socket. The library default (16) makes a short stall of the event loop
+    # push back on the server, which then drops us as a slow consumer.
+    recv_queue_frames: int = 8192
 
 
 def subscription_diff(current: Set[str], wanted: Set[str]) -> tuple[list[str], list[str]]:
@@ -159,6 +163,7 @@ class _Session:
         async with connect(
             self._cfg.url,
             max_size=self._cfg.max_frame_bytes,
+            max_queue=self._cfg.recv_queue_frames,
             # Liveness is handled at application level (PING + watchdog).
             ping_interval=None,
         ) as ws:
