@@ -51,6 +51,22 @@ one event, whose `markets[0]` is the binary market.
 - Events carry `seriesSlug` / `series`, a likely route to discover 1h/4h markets.
 - Liquidity rewards parameters: `rewardsMaxSpread = 4.5`, `rewardsMinSize = 50`.
 
+## Observed on the live market channel (2026-11-12)
+
+- Text `PING` is answered with `PONG`; subscribing on an open connection sends
+  a `book` snapshot per added asset; `timestamp` fields are milliseconds.
+- Initial dumps arrive as a JSON array of events; later messages are single
+  JSON objects. No permessage-deflate is negotiated.
+- Load: all 5m/15m markets of btc, eth, sol, xrp (64 assets) produce roughly
+  1000-2800 msgs/s, about 34 MB of zstd-3 raw data in 7 minutes (~7 GB/day).
+- With everything on one connection the server closed it twice in two minutes
+  with code 1013 "slow consumer: send buffer full", although the client was
+  keeping up. With one connection per (asset, window) no 1013 was seen in 7
+  minutes. Short sample: to be confirmed by the 24 h run.
+- In that 7-minute run all 8 connections were dropped at the same instant
+  (TCP close without a close frame) about 4 minutes after connecting; they
+  reconnected within 1-3 s. Cause unknown (local network or server side).
+
 ## Not verified yet (do not code by assumption)
 
 - Polymarket market-channel timestamp unit (ms inferred from 13-digit examples).

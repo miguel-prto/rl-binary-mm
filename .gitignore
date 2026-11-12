@@ -32,3 +32,6 @@ Thumbs.db
 # Private notes and editor files
 notas/
 *.code-workspace
+
+# Local logs
+*.log

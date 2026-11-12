@@ -5,7 +5,10 @@ one JSON line per frame, in hourly-rotated zstd-compressed files:
 
     {root}/raw/{source}/date=YYYY-MM-DD/{source}_{HH}_{conn_id}.jsonl.zst
 
-Each line is ``{"recv_ns": int, "conn_id": str, "dir": "in"|"out", "frame": str}``.
+Each line is ``{"recv_ns": int, "conn_id": str, "dir": "in"|"out"|"meta", "frame": str}``.
+``in`` and ``out`` are frames received and sent. ``meta`` lines are written by
+the recorder itself (connect, disconnect, stale...) so that gaps are recorded
+in order next to the data; their ``frame`` is a JSON object with an ``event`` key.
 ``frame`` is the original text frame, never re-parsed or re-serialised, so the
 raw layer is byte-faithful and parsers can be fixed and re-run later.
 
@@ -35,7 +38,7 @@ from typing import IO, Literal
 import orjson
 import zstandard as zstd
 
-Direction = Literal["in", "out"]
+Direction = Literal["in", "out", "meta"]
 
 _NS_PER_HOUR = 3_600 * 1_000_000_000
 
