@@ -29,7 +29,7 @@ def iso(t_s: int) -> str:
 
 def event_for_slug(template: dict[str, Any], slug: str) -> dict[str, Any]:
     """Synthesize a Gamma event for any slug from the real fixture."""
-    asset, _, window, start = slug.split("-")
+    _asset, _, window, start = slug.split("-")
     length = {"5m": 300, "15m": 900}[window]
     ev = copy.deepcopy(template)
     ev["slug"] = slug
@@ -103,7 +103,7 @@ def test_parse_rejects_window_mismatch(event: dict[str, Any]) -> None:
 
 def test_parse_rejects_tick_finer_than_scale(event: dict[str, Any]) -> None:
     event["markets"][0]["orderPriceMinTickSize"] = 0.00001
-    with pytest.raises(ValueError, match="multiple of 0.0001"):
+    with pytest.raises(ValueError, match=r"multiple of 0.0001"):
         parse_gamma_event(event, asset="btc", window="15m")
 
 

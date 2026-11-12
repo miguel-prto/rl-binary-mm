@@ -1,0 +1,26 @@
+# Recorder services. One container per (venue, scope) so that a problem in one
+# never interrupts the others.
+#
+#   TFG_DATA_DIR  host directory for the data tree (default: ../data)
+#   TFG_UID_GID   uid:gid that owns the data files (default: 1000:1000)
+
+x-recorder: &recorder
+  build:
+    context: ..
+    dockerfile: recorder/Dockerfile
+  image: tfg-recorder
+  restart: unless-stopped
+  user: "${TFG_UID_GID:-1000:1000}"
+  volumes:
+    - "${TFG_DATA_DIR:-../data}:/data"
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  pm-crypto:
+    <<: *recorder
+    command: ["--min-free-gb", "5", "polymarket-clob"]

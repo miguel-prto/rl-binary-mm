@@ -20,6 +20,7 @@ import httpx
 from tfg.data.discovery.polymarket import PolymarketDiscovery
 from tfg.data.sources.base import run_forever
 from tfg.data.sources.polymarket_clob import PolymarketClobRecorder
+from tfg.recorder.diskguard import run_guarded
 
 log = logging.getLogger("tfg.recorder")
 
@@ -37,6 +38,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path(os.environ.get("TFG_DATA_DIR", "./data")),
         help="root of the data tree (default: $TFG_DATA_DIR or ./data)",
+    )
+    parser.add_argument(
+        "--min-free-gb",
+        type=float,
+        default=3.0,
+        help="pause recording while the data disk has less free space than this",
     )
     sub = parser.add_subparsers(dest="source", required=True)
 
@@ -89,14 +96,17 @@ async def _main(args: argparse.Namespace) -> None:
     with contextlib.suppress(NotImplementedError):
         asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, task.cancel)
 
-    if args.source == "polymarket-clob":
-        work = _polymarket_clob(args)
-    else:  # unreachable: argparse restricts the choices
+    if args.source != "polymarket-clob":  # unreachable: argparse restricts the choices
         raise ValueError(args.source)
 
+    args.data_dir.mkdir(parents=True, exist_ok=True)
     try:
         async with asyncio.timeout(args.max_seconds):
-            await work
+            await run_guarded(
+                lambda: _polymarket_clob(args),
+                args.data_dir,
+                int(args.min_free_gb * 1e9),
+            )
     except TimeoutError:
         log.info("reached --max-seconds=%s", args.max_seconds)
 
