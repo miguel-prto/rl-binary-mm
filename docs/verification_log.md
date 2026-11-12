@@ -45,6 +45,10 @@ one event, whose `markets[0]` is the binary market.
   takerOnly: true, rebateRate: 0.2}`, `takerBaseFee = makerBaseFee = 1000`,
   `makerRebatesFeeShareBps = 10000`. Semantics of these numbers still to be
   confirmed in the fees documentation before use in the simulator.
+- `orderPriceMinTickSize` changes during a market's life: closed windows showed
+  0.001 while upcoming ones showed 0.01. The value in a `MarketSpec` is only the
+  tick at discovery time; the WebSocket `tick_size_change` event is the reference.
+- Events carry `seriesSlug` / `series`, a likely route to discover 1h/4h markets.
 - Liquidity rewards parameters: `rewardsMaxSpread = 4.5`, `rewardsMinSize = 50`.
 
 ## Not verified yet (do not code by assumption)
