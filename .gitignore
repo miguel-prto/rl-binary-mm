@@ -4,7 +4,7 @@
 !.env.example
 
 # Data (never committed; lives on the VPS and in backups)
-data/
+/data/
 
 # Python
 __pycache__/
