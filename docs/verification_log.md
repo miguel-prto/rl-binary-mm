@@ -67,11 +67,31 @@ one event, whose `markets[0]` is the binary market.
   (TCP close without a close frame) about 4 minutes after connecting; they
   reconnected within 1-3 s. Cause unknown (local network or server side).
 
+## Verified on recorded data (2026-11-12, BTC 15m shard, 13:00-14:00 UTC, 1.68 M price changes)
+
+- `timestamp` is epoch milliseconds: on the NTP-synced server the receive time
+  is 17 ms later at the median (p99 126 ms).
+- `price_change.size` is the new absolute size of the level. Applying the
+  changes to the first snapshot, with no later resync, reproduces every later
+  `book` snapshot except for transient ordering effects (below).
+- Messages can arrive out of timestamp order: 2,403 of 1,688,446 events had an
+  earlier timestamp than the previous one, usually by under 10 ms, a few by
+  200 ms or more. Snapshot mismatches: 30 of 6,600 in arrival order, 6 when
+  events are applied in timestamp order.
+- Every `price_change` carries two entries, one per token, that are exact
+  mirrors (same size, opposite side, prices adding up to 1).
+- A `book` snapshot for both tokens is sent with every trade.
+- Prices have up to 3 decimals, book sizes up to 2, trade sizes up to 6.
+- 3,283 of 3,297 trades have a `price_change` at the same token and price
+  within 100 ms.
+- `market_resolved` does arrive, but usually after the market has been
+  unsubscribed: 14 events for roughly 128 markets that closed in two hours.
+  `new_market` events are a firehose of all new Up/Down markets.
+- Subscribing to one token only does not reduce `price_change` traffic and
+  loses the trades of the other token.
+
 ## Not verified yet (do not code by assumption)
 
-- Polymarket market-channel timestamp unit (ms inferred from 13-digit examples).
-- Polymarket `price_change.size` being the absolute level size (to be checked
-  empirically against `best_bid`/`best_ask`).
 - Polymarket 1h and 4h "Up/Down" slugs or series ids.
 - Polymarket fee-field semantics (`feeSchedule`, `takerBaseFee`, rebates).
 - Polymarket limits: asset ids per connection, connections per IP.
