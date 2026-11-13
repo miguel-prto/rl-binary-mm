@@ -14,7 +14,8 @@
 - Simulador: núcleo en C++20 (order book L3 con IDs de orden) con bindings en Python. El resto, en Python.
 - RL: Gymnasium + Stable-Baselines3 (PPO y SAC), entrenamiento en CPU.
 - Datos: Kalshi y Polymarket dan L2 (más fills on-chain a nivel de orden en Polymarket), no L3. El simulador es L3 internamente y reconstruye eventos a partir de los deltas L2 (ver PLAN_TFG.md §3.0).
-- Grabación más amplia que el alcance del TFG: todas las duraciones cripto "Up/Down" (BTC, ETH, SOL, XRP) y una selección de mercados macro/políticos, por si se amplía. Cripto 15 min siempre aislado del resto (ver PLAN_TFG.md §2 y `docs/recorder_design.md`).
+- El recorder está en un repo aparte, `market-recorder` (paquete `marketrec`, en `../market-recorder`), compartido con el TFG de Matemáticas. Aquí solo se lee el raw (`marketrec.raw.iter_raw_records`) y se normaliza; los cambios de grabación se hacen allí.
+- Grabación más amplia que el alcance del TFG: todas las duraciones cripto "Up/Down" (BTC, ETH, SOL, XRP) y una selección de mercados macro/políticos, por si se amplía. Cripto 15 min siempre aislado del resto (ver PLAN_TFG.md §2 y `docs/design.md` en market-recorder).
 - Sin dinero real. Como mucho, "shadow trading" (feed real, fills simulados de forma conservadora).
 - Fuera de alcance por ahora: multi-resultado y multiagente.
 
@@ -28,8 +29,7 @@
 ## Estructura prevista
 ```
 cpp/            núcleo C++ (include/, src/, tests/, bench/, bindings/)
-python/tfg/     data/ store/ calibration/ market/ env/ agents/ eval/ live/
-recorder/       servicio 24/7 desplegable con Docker
+python/rl_binary_mm/  data/ store/ calibration/ market/ env/ agents/ eval/ live/
 experiments/    configs + scripts reproducibles
 notebooks/      EDA y figuras
 memoria/        LaTeX

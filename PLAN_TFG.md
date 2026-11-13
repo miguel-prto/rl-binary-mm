@@ -66,21 +66,22 @@ repo/
 ├── cpp/                 # núcleo C++20: order book L3, matching, colas, latencia, fees
 │   ├── include/ src/ tests/ (GoogleTest) bench/ (Google Benchmark)
 │   └── bindings/        # nanobind/pybind11 → módulo Python `pmsim`
-├── python/tfg/
-│   ├── data/            # clientes REST/WS Kalshi y Polymarket, spot (Coinbase/Binance), on-chain
-│   ├── store/           # esquema normalizado, escritura Parquet, consultas DuckDB
+├── python/rl_binary_mm/
+│   ├── data/            # histórico de trades (Kalshi API; Polymarket on-chain/Data API)
+│   ├── store/           # normalización raw → Parquet, esquema, reconstrucción del libro, vistas DuckDB
 │   ├── calibration/     # volatilidad del subyacente, intensidades de llegada λ(δ)=A·e^{-kδ}, Hawkes, tamaños
 │   ├── market/          # modelo generativo: subyacente, valor justo, traders de fondo
 │   ├── env/             # Gymnasium: obs/acción/recompensa; modos synthetic | replay | shadow
 │   ├── agents/          # baselines + wrappers RL (SB3)
 │   ├── eval/            # métricas, PnL attribution, markouts, tests estadísticos, informes
 │   └── live/            # shadow trading
-├── recorder/            # servicio desplegable (Docker) para el VPS
 ├── experiments/         # configs (Hydra o YAML) + scripts reproducibles
 ├── notebooks/           # EDA y figuras de la memoria
 ├── memoria/             # LaTeX de la memoria
 └── .github/workflows/   # CI: build C++, tests, lint
 ```
+
+El recorder 24/7 vive en un repositorio aparte, [market-recorder](https://github.com/miguel-prto/market-recorder), compartido con el TFG de Matemáticas. Graba los feeds sin procesar y este repo lo usa como dependencia (paquete `marketrec`) para leer esos ficheros y normalizarlos.
 
 **Stack.**
 - C++20, CMake, GoogleTest, nanobind.

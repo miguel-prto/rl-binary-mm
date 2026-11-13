@@ -1,21 +1,24 @@
-# Adaptive Liquidity Provision in Prediction Markets Using RL
+# rl-binary-mm
 
-Bachelor's thesis (Computer Science, UCM). An RL market maker for short-dated
-crypto "Up/Down" binary markets on Polymarket and Kalshi, with a C++ limit
-order book simulator and a 24/7 data recorder.
+Adaptive liquidity provision in prediction markets using reinforcement
+learning. Bachelor's thesis (Computer Science, UCM): an RL market maker for
+short-dated crypto "Up/Down" binary markets on Polymarket and Kalshi, trained
+in a C++ limit order book simulator calibrated and replayed on recorded data.
 
-Status: phase 1 (data recorder). See [docs/recorder_design.md](docs/recorder_design.md).
+Status: phase 1 (data). Order books are recorded 24/7 by
+[market-recorder](https://github.com/miguel-prto/market-recorder); this
+repository turns those recordings into Parquet tables. See
+[docs/data_design.md](docs/data_design.md).
 
 ## Layout
 
 ```
-cpp/            C++20 core (L3 order book, matching, fees) + Python bindings
-python/tfg/     data/ store/ calibration/ market/ env/ agents/ eval/ live/
-recorder/       24/7 service deployable with Docker
-experiments/    versioned configs + reproducible scripts
-notebooks/      EDA and figures
-docs/           design documents
-memoria/        thesis (LaTeX, Spanish)
+cpp/                  C++20 core (L3 order book, matching, fees) + Python bindings
+python/rl_binary_mm/  data/ store/ calibration/ market/ env/ agents/ eval/ live/
+experiments/          versioned configs + reproducible scripts
+notebooks/            EDA and figures
+docs/                 design documents
+memoria/              thesis (LaTeX, Spanish)
 ```
 
 ## Development
@@ -30,4 +33,6 @@ uv run ruff format .    # format
 uv run pyright          # type check
 ```
 
-Secrets go in `.env` (see `.env.example`); nothing sensitive is committed.
+Recorded data is expected under `data/` (not committed). To fetch it from the
+recording server, use `python -m marketrec.pull` from the market-recorder
+repository.

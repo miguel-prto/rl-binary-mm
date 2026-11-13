@@ -1,5 +1,5 @@
-import tfg
+import rl_binary_mm
 
 
 def test_package_imports() -> None:
-    assert tfg.__version__
+    assert rl_binary_mm.__version__

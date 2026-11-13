@@ -1,4 +1,4 @@
-# Normalise line endings: LF in the repo and in checkouts (the recorder runs on Linux).
+# Normalise line endings: LF in the repo and in checkouts (data tools also run on Linux).
 * text=auto eol=lf
 *.png binary
 *.parquet binary
