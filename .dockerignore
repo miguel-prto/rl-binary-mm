@@ -1,0 +1,8 @@
+# Keep the build context small: recorded data and local environments stay out.
+data/
+.venv/
+.git/
+notas/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/

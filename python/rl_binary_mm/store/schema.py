@@ -108,6 +108,31 @@ RECORDER_EVENTS = pa.schema(
     ]
 )
 
+# One row per normalised raw file, written together with its other outputs.
+# It is the record that the file was normalised, by which version of the
+# normaliser, and with what losses: raw files are only deleted when
+# ``unknown_asset_events`` is 0 (see store/retention.py).
+NORMALIZE_STATS = pa.schema(
+    [
+        pa.field("conn_id", pa.string(), nullable=False),
+        pa.field("raw_file", pa.string(), nullable=False),  # file name in raw/pm_clob/date=.../
+        pa.field("raw_bytes", pa.int64(), nullable=False),
+        pa.field("normalizer_version", pa.int32(), nullable=False),
+        pa.field("normalized_at_ns", pa.int64(), nullable=False),  # wall clock, ns UTC
+        pa.field("lines", pa.int64(), nullable=False),
+        pa.field("level_changes", pa.int64(), nullable=False),
+        pa.field("trades", pa.int64(), nullable=False),
+        pa.field("tick_size_changes", pa.int64(), nullable=False),
+        pa.field("mirrored_pairs", pa.int64(), nullable=False),
+        pa.field("unmirrored_groups", pa.int64(), nullable=False),
+        pa.field("unknown_asset_events", pa.int64(), nullable=False),
+        pa.field("unknown_assets", pa.int64(), nullable=False),
+        pa.field("snapshots_seen", pa.int64(), nullable=False),
+        pa.field("snapshots_kept", pa.int64(), nullable=False),
+        pa.field("empty_snapshots_kept", pa.int64(), nullable=False),
+    ]
+)
+
 # Market-data tables: all start with the common columns.
 TABLES: dict[str, pa.Schema] = {
     "book_deltas": BOOK_DELTAS,
