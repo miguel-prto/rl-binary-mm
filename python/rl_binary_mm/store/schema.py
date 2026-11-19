@@ -9,9 +9,11 @@ shares x 10^6. Timestamps are integers, UTC: ``ts_exchange_ms`` is the venue's
 time in ms, ``ts_recv_ns`` the recording server's clock in ns.
 
 Ordering: events can arrive out of exchange-time order, so consumers sort by
-``(ts_exchange_ms, seq)``. ``seq`` is the arrival position of the event inside
-its raw file (one file per connection and hour), which breaks ties between
-events with the same exchange timestamp.
+``(ts_exchange_ms, seq)`` with a stable sort. ``seq`` is the 0-based line
+number of the event's frame in its raw file (one file per connection and
+hour), so every row can be traced back to the frame it came from. Rows from
+one frame (the two entries of a price change, the books of the initial dump)
+share ``seq`` and keep the frame's order.
 """
 
 from __future__ import annotations
@@ -41,10 +43,13 @@ BOOK_DELTAS = pa.schema(
     ]
 )
 
+# One row per level. The rows of one snapshot share (conn_id, seq, market_id,
+# outcome). Only the first snapshot of each token in each file and then the
+# first of each new exchange minute are kept; the rest are redundant with the
+# deltas and stay in the raw layer for validation.
 BOOK_SNAPSHOTS = pa.schema(
     [
         *_COMMON,
-        pa.field("snapshot_id", pa.int64(), nullable=False),  # groups the rows of one snapshot
         pa.field("side", pa.string(), nullable=False),
         pa.field("price_e4", pa.int32(), nullable=False),
         pa.field("size_e6", pa.int64(), nullable=False),
@@ -70,6 +75,40 @@ TICK_SIZE_CHANGES = pa.schema(
     ]
 )
 
+# One row per market, rebuilt from every recorded Gamma response (not
+# partitioned by hour: a market's metadata may have been recorded hours before
+# its events, by an earlier connection of the same shard).
+MARKETS = pa.schema(
+    [
+        pa.field("market_id", pa.string(), nullable=False),  # Polymarket: condition_id
+        pa.field("slug", pa.string(), nullable=False),
+        pa.field("underlying", pa.string(), nullable=False),  # e.g. 'BTC'
+        pa.field("window", pa.string(), nullable=False),  # e.g. '15m'
+        pa.field("window_start_ms", pa.int64(), nullable=False),
+        pa.field("window_end_ms", pa.int64(), nullable=False),
+        pa.field("up_asset_id", pa.string(), nullable=False),
+        pa.field("down_asset_id", pa.string(), nullable=False),
+        # At first discovery; it can change later (see the tick_size_changes table).
+        pa.field("tick_size_e4", pa.int32(), nullable=False),
+        pa.field("resolution_source", pa.string(), nullable=True),
+        pa.field("discovered_recv_ns", pa.int64(), nullable=False),  # first time recorded
+    ]
+)
+
+# The recorder's own log, from the raw ``meta`` lines (connecting, connect,
+# disconnect, stale) and the frames it sent (subscribe, unsubscribe; not PING).
+# Tells the replay environment which intervals are valid.
+RECORDER_EVENTS = pa.schema(
+    [
+        pa.field("ts_recv_ns", pa.int64(), nullable=False),
+        pa.field("conn_id", pa.string(), nullable=False),
+        pa.field("seq", pa.int64(), nullable=False),
+        pa.field("kind", pa.string(), nullable=False),
+        pa.field("detail", pa.string(), nullable=False),  # the raw frame, verbatim
+    ]
+)
+
+# Market-data tables: all start with the common columns.
 TABLES: dict[str, pa.Schema] = {
     "book_deltas": BOOK_DELTAS,
     "book_snapshots": BOOK_SNAPSHOTS,
